@@ -5,6 +5,8 @@ import cors from "cors";
 import connectDb from "./config/db.js";
 import auth from "./routes/auth.js";
 import userRoute from "./routes/userRoutes.js";
+import protectedRoutes from "./routes/protected.js";
+import healthStats from "./routes/healthStats.js";
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.get("/", (req, res) => {
 // routes
 app.use("/api/auth", auth);
 app.use("/api", userRoute);
+app.use("/api/protected", protectedRoutes);
+app.use("/api", healthStats);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
