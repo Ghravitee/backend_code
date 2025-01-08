@@ -96,24 +96,45 @@ export const getUsersById = async (req, res) => {
 };
 
 // Update a user
+
 export const updateUser = async (req, res) => {
   try {
-    const { password, confirmPassword } = req.body;
+    const { password, confirmPassword, ...updateData } = req.body;
 
+    // Validate passwords if provided
     if (password && password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match." });
     }
 
+    // If password is provided, hash it
     if (password) {
-      req.body.password = await bcrypt.hash(password, 10);
+      updateData.password = await bcrypt.hash(password, 10);
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    // Only allow the update of specific fields
+    const allowedFields = [
+      "fullName",
+      "username",
+      "dateOfBirth",
+      "gender",
+      "weight",
+      "height",
+    ];
+
+    // Remove any fields not in the allowed fields list
+    Object.keys(req.body).forEach((key) => {
+      if (!allowedFields.includes(key)) {
+        delete updateData[key];
+      }
+    });
+
+    // Update user
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     }).select("-password -confirmPassword");
 
-    if (!user) return res.status(404).json({ message: "Patient not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
     res.status(200).json(user);
   } catch (error) {
