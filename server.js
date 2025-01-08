@@ -28,7 +28,7 @@ app.options("*", cors());
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send("Hello World!!!!");
 });
 
 // routes
@@ -37,7 +37,7 @@ app.use("/api", userRoute);
 app.use("/api/protected", protectedRoutes);
 app.use("/api", healthStats);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || "https://lifetrak.onrender.com";
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
 });
