@@ -63,6 +63,9 @@ router.post(
   userController.createUser
 );
 
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password/:token", resetPassword);
+
 router.get("/users", userController.getUsers); // Get all users
 router.get("/users/:id", userController.getUsersById); // Get a user by ID
 router.put("/users/:id", userController.updateUser); // Update a user b yID
