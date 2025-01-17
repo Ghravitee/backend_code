@@ -97,9 +97,9 @@ router.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "strict",
+      sameSite: "none",
       maxAge: 60 * 60 * 1000,
-      secure: process.env.NODE_ENV !== "development",
+      secure: process.env.NODE_ENV,
     });
 
     res.status(200).json({ message: "Login successfully", userId: user._id });
@@ -113,7 +113,7 @@ router.post("/login", async (req, res) => {
 router.post("/logout", (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
+    secure: process.env.NODE_ENV,
   });
   res.status(200).json({ message: "Logged out successfully" });
 });
