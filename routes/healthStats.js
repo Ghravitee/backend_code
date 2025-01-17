@@ -47,8 +47,9 @@ const healthStatsValidationRules = [
     .withMessage("Weight must be between 0 and 500 kg"),
   check("vitals.bloodGlucoseLevel")
     .optional()
-    .isFloat({ min: 0, max: 30 })
-    .withMessage("Blood Glucose Level must be between 0 and 30 mmol/L"),
+    .matches(/^\d{2,3}\/\d{2,3}$/)
+    .withMessage('Blood Pressure must be in the format "120/80"'),
+
   check("exerciseLog.walking")
     .optional()
     .isFloat({ min: 0 })
