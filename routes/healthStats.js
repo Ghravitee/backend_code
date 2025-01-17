@@ -48,7 +48,7 @@ const healthStatsValidationRules = [
   check("vitals.bloodGlucoseLevel")
     .optional()
     .matches(/^\d{2,3}\/\d{2,3}$/)
-    .withMessage('Blood Pressure must be in the format "120/80"'),
+    .withMessage('Blood Glucose level must be in the format "120/80"'),
 
   check("exerciseLog.walking")
     .optional()
