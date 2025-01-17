@@ -18,7 +18,7 @@ const healthStatsSchema = new mongoose.Schema(
       bloodPressure: { type: String, required: false }, // Format: "120/80"
       bloodOxygen: { type: Number, required: false },
       weight: { type: Number, required: false },
-      bloodGlucoseLevel: { type: String, required: false },
+      bloodGlucoseLevel: { type: Number, required: false },
     },
     exerciseLog: {
       walking: { type: Number, required: false }, // in km
