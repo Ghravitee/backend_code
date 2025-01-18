@@ -21,10 +21,10 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     confirmPassword: { type: String },
-    // Embed the health stats schema here
     healthStats: {
-      type: healthStatsSchema,
-      default: {}, // Empty object means no health stats until added
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "HealthStats",
+      default: null, // Initially, no health stats linked
     },
   },
   { timestamps: true }
