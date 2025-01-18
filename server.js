@@ -7,6 +7,7 @@ import auth from "./routes/auth.js";
 import userRoute from "./routes/userRoutes.js";
 import protectedRoutes from "./routes/protected.js";
 import healthStats from "./routes/healthStats.js";
+import codeValidationRoute from "./routes/codeValidationRoute.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/auth", auth);
 app.use("/api", userRoute);
 app.use("/api/protected", protectedRoutes);
 app.use("/api", healthStats);
+app.use("/api", codeValidationRoute);
 
 const PORT = process.env.PORT || "https://lifetrak.onrender.com";
 app.listen(PORT, () => {
