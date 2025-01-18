@@ -7,7 +7,6 @@ import auth from "./routes/auth.js";
 import userRoute from "./routes/userRoutes.js";
 import protectedRoutes from "./routes/protected.js";
 import healthStats from "./routes/healthStats.js";
-import { isAuthorized } from "./middleware/auth.js";
 
 dotenv.config();
 
