@@ -100,6 +100,6 @@ router.put(
 router.get("/all-healthstats", getAllUserHealthStats);
 
 // Sample route to fetch health stats, only accessible for data analysts with the correct code
-router.get("/healthstats", isAuthorized, getAllHealthStats);
+router.get("/healthstats", getAllHealthStats);
 
 export default router;
