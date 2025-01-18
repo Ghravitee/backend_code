@@ -1,4 +1,5 @@
 import User from "../models/User.js"; // Import the User model
+import HealthStats from "../models/HealthStats.js"; // Import the HealthStats model
 
 // Create Health Stats (for a user)
 export const createHealthStats = async (req, res) => {
@@ -28,17 +29,24 @@ export const createHealthStats = async (req, res) => {
       });
     }
 
-    // Add the new health stats to the user's healthStats array
-    user.healthStats.push({
+    // Create the health stats document in the HealthStats collection
+    const healthStats = new HealthStats({
+      userId,
       date: normalizedDate,
       vitals,
       exerciseLog,
     });
 
+    // Save the new health stats document
+    await healthStats.save();
+
+    // Add the new health stats ObjectId to the user's healthStats array
+    user.healthStats.push(healthStats._id);
+
     // Save the updated user document
     await user.save();
 
-    res.status(201).json(user.healthStats[user.healthStats.length - 1]); // Return the newly added stats
+    res.status(201).json(healthStats); // Return the newly added health stats
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

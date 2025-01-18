@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import healthStatsSchema from "../models/HealthStats.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -21,11 +20,12 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     confirmPassword: { type: String },
-    healthStats: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "HealthStats",
-      default: null, // Initially, no health stats linked
-    },
+    healthStats: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "HealthStats",
+      },
+    ], // Updated to be an array of ObjectIds
   },
   { timestamps: true }
 );
@@ -53,6 +53,6 @@ userSchema.set("toJSON", {
   },
 });
 
-const User = new mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
 
 export default User;
