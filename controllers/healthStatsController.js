@@ -1,6 +1,3 @@
-import User from "../models/User.js"; // Import the User model
-import HealthStats from "../models/HealthStats.js"; // Import the HealthStats model
-
 // Create Health Stats (for a user)
 export const createHealthStats = async (req, res) => {
   try {
@@ -19,7 +16,7 @@ export const createHealthStats = async (req, res) => {
 
     // Check if the user already logged stats for the given date
     const existingStats = user.healthStats.find(
-      (stats) => stats.date.getTime() === normalizedDate.getTime()
+      (stats) => stats.date && stats.date.getTime() === normalizedDate.getTime() // Check if stats.date is valid
     );
 
     // If the user already logged health stats for this date, respond with an error
