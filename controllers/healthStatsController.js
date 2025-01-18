@@ -45,10 +45,6 @@ export const createHealthStats = async (req, res) => {
 export const getAllHealthStats = async (req, res) => {
   try {
     const { userId } = req.user;
-    // Check if the user ID is available
-    // if (!req.user || !req.user.id) {
-    //   return res.status(400).json({ message: "User ID is required." });
-    // }
 
     // Fetch all health stats for the logged-in user
     const healthStats = await HealthStats.find({ userId });
@@ -65,6 +61,19 @@ export const getAllHealthStats = async (req, res) => {
       message: "An error occurred while fetching health stats.",
       error: error.message,
     });
+  }
+};
+
+export const getAllUserHealthStats = async (req, res) => {
+  try {
+    // Query the database to fetch all health stats
+    const healthStats = await HealthStats.find(); // Fetches all documents in the HealthStat collection
+
+    // Send the fetched data as a response
+    return res.status(200).json(healthStats);
+  } catch (error) {
+    console.error("Error fetching health stats:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 

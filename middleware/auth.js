@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-const auth = () => {
+export const auth = () => {
   return async (req, res, next) => {
     const token = req.cookies.token;
 
@@ -42,4 +42,15 @@ const auth = () => {
   };
 };
 
-export default auth;
+// authMiddleware.js
+export const isAuthorized = (req, res, next) => {
+  // Retrieve the secret code from various possible locations
+  const code = req.body.code || req.query.code || req.headers["x-secret-code"];
+  const VALID_CODE = 123456; // Load the code from environment variables
+
+  if (code === VALID_CODE) {
+    next(); // Code matches; proceed to the next middleware or route handler
+  } else {
+    return res.status(403).json({ message: "Forbidden: Unauthorized access" });
+  }
+};

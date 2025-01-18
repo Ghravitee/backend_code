@@ -7,6 +7,7 @@ import auth from "./routes/auth.js";
 import userRoute from "./routes/userRoutes.js";
 import protectedRoutes from "./routes/protected.js";
 import healthStats from "./routes/healthStats.js";
+import { isAuthorized } from "./middleware/auth.js";
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 const corsOptions = {
   origin: ["https://life-trak.vercel.app", "http://localhost:5173"],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-analytics-code"],
   credentials: true,
 };
 app.use(cors(corsOptions));
