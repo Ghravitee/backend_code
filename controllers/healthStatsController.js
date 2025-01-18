@@ -1,4 +1,5 @@
-// Create Health Stats (for a user)
+import HealthStats from "../models/HealthStats.js";
+
 export const createHealthStats = async (req, res) => {
   try {
     const { userId, date, vitals, exerciseLog } = req.body;
@@ -7,81 +8,63 @@ export const createHealthStats = async (req, res) => {
     const normalizedDate = new Date(date);
     normalizedDate.setUTCHours(0, 0, 0, 0); // Set to the start of the day
 
-    // Find the user by userId
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Check if the user already logged stats for the given date
-    const existingStats = user.healthStats.find(
-      (stats) => stats.date && stats.date.getTime() === normalizedDate.getTime() // Check if stats.date is valid
-    );
+    // Check if the user has already logged stats for the given date
+    const existingStats = await HealthStats.findOne({
+      userId,
+      date: {
+        $gte: normalizedDate,
+        $lt: new Date(normalizedDate).setUTCHours(23, 59, 59, 999),
+      }, // Check for stats within the same day
+    });
 
     // If the user already logged health stats for this date, respond with an error
     if (existingStats) {
-      return res.status(400).json({
-        message: "Stats for this date already exist for the user.",
-      });
+      return res
+        .status(400)
+        .json({ message: "Stats for this date already exist for the user." });
     }
 
-    // Create the health stats document in the HealthStats collection
-    const healthStats = new HealthStats({
+    // Create a new stats entry
+    const newStats = new HealthStats({
       userId,
       date: normalizedDate,
       vitals,
       exerciseLog,
     });
 
-    // Save the new health stats document
-    await healthStats.save();
+    // Save the stats to the database
+    await newStats.save();
 
-    // Add the new health stats ObjectId to the user's healthStats array
-    user.healthStats.push(healthStats._id);
-
-    // Save the updated user document
-    await user.save();
-
-    res.status(201).json(healthStats); // Return the newly added health stats
+    // Respond with the newly created stats
+    res.status(201).json(newStats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Fetch User with populated healthStats
-export const getUserWithHealthStats = async (req, res) => {
+export const getAllUserHealthStats = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    // Query the database to fetch all health stats
+    const healthStats = await HealthStats.find(); // Fetches all documents in the HealthStat collection
 
-    // Find the user by their ID and populate the healthStats field
-    const user = await User.findById(userId).populate("healthStats");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(user); // Send the user with full healthStats populated
+    // Send the fetched data as a response
+    return res.status(200).json(healthStats);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching health stats:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
-// Get All Health Stats for the Logged-in User
 export const getAllHealthStats = async (req, res) => {
   try {
-    const { userId } = req.user; // userId is set by auth middleware
+    // Fetch all health stats (remove user-specific filters)
+    const healthStats = await HealthStats.find();
 
-    // Find the user by userId and fetch their healthStats
-    const user = await User.findById(userId).select("healthStats");
-
-    if (!user || !user.healthStats.length) {
-      return res
-        .status(404)
-        .json({ message: "No health stats found for the user." });
+    if (!healthStats || healthStats.length === 0) {
+      return res.status(404).json({ message: "No health stats found." });
     }
 
-    res.status(200).json(user.healthStats);
+    res.status(200).json(healthStats);
   } catch (error) {
     res.status(500).json({
       message: "An error occurred while fetching health stats.",
@@ -90,29 +73,6 @@ export const getAllHealthStats = async (req, res) => {
   }
 };
 
-// Get Health Stats for All Users (Admin endpoint)
-export const getAllUserHealthStats = async (req, res) => {
-  try {
-    // Query the database to fetch all users and their health stats
-    const users = await User.find().select("fullName healthStats");
-
-    if (!users || users.length === 0) {
-      return res.status(404).json({ message: "No users found." });
-    }
-
-    const allHealthStats = users.map((user) => ({
-      fullName: user.fullName,
-      healthStats: user.healthStats,
-    }));
-
-    res.status(200).json(allHealthStats);
-  } catch (error) {
-    console.error("Error fetching health stats:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
-};
-
-// Get Health Stats for a Specific Date
 export const getHealthStatsByDate = async (req, res) => {
   try {
     const { userId } = req.user; // userId is set by auth middleware
@@ -126,17 +86,11 @@ export const getHealthStatsByDate = async (req, res) => {
     const endOfDay = new Date(date);
     endOfDay.setUTCHours(23, 59, 59, 999); // Normalize to the end of the day (UTC)
 
-    // Find the user and search for health stats within the specified date range
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Find health stats for the user on the specified date
-    const stats = user.healthStats.find(
-      (stats) => stats.date >= startOfDay && stats.date <= endOfDay
-    );
+    // Query the database for health stats between startOfDay and endOfDay
+    const stats = await HealthStats.findOne({
+      userId,
+      date: { $gte: startOfDay, $lte: endOfDay }, // Date range query
+    });
 
     if (!stats) {
       return res.status(404).json({ message: "No stats found for this date." });
@@ -148,25 +102,15 @@ export const getHealthStatsByDate = async (req, res) => {
   }
 };
 
-// Get Health Stats by Date Range
 export const getHealthStatsByRange = async (req, res) => {
   try {
     const { userId } = req.user;
     const { start, end } = req.params;
 
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    // Find the user by userId and get the health stats within the given range
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    const stats = user.healthStats.filter(
-      (stat) => stat.date >= startDate && stat.date <= endDate
-    );
+    const stats = await HealthStats.find({
+      userId,
+      date: { $gte: new Date(start), $lte: new Date(end) },
+    });
 
     res.status(200).json(stats);
   } catch (error) {
@@ -174,37 +118,147 @@ export const getHealthStatsByRange = async (req, res) => {
   }
 };
 
-// Update Health Stats for a Specific Date
 export const updateHealthStats = async (req, res) => {
   try {
     const { userId } = req.user;
     const { date } = req.params;
     const { vitals, exerciseLog } = req.body;
 
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Find the health stats for the specified date
-    const statsIndex = user.healthStats.findIndex(
-      (stat) => stat.date.toISOString().split("T")[0] === date
+    const updatedStats = await HealthStats.findOneAndUpdate(
+      { userId, date },
+      { vitals, exerciseLog },
+      { new: true, runValidators: true }
     );
 
-    if (statsIndex === -1) {
+    if (!updatedStats) {
       return res.status(404).json({ message: "No stats found for this date." });
     }
 
-    // Update the stats for that date
-    user.healthStats[statsIndex].vitals = vitals;
-    user.healthStats[statsIndex].exerciseLog = exerciseLog;
-
-    // Save the updated user document
-    await user.save();
-
-    res.status(200).json(user.healthStats[statsIndex]);
+    res.status(200).json(updatedStats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// import HealthStats from "../models/HealthStats.js";
+
+// export const createHealthStats = async (req, res) => {
+//   try {
+//     const {
+//       userId,
+//       date,
+//       vitals,
+//       exerciseLog,
+//       symptoms,
+//       sleepPatterns,
+//       mentalHealth,
+//     } = req.body;
+
+//     // Normalize the date to only consider the date part (ignore the time)
+//     const normalizedDate = new Date(date);
+//     normalizedDate.setUTCHours(0, 0, 0, 0); // Set to the start of the day
+
+//     // Check if the user has already logged stats for the given date
+//     const existingStats = await HealthStats.findOne({
+//       userId,
+//       date: {
+//         $gte: normalizedDate,
+//         $lt: new Date(normalizedDate).setUTCHours(23, 59, 59, 999),
+//       },
+//     });
+
+//     // If the user already logged health stats for this date, respond with an error
+//     if (existingStats) {
+//       return res
+//         .status(400)
+//         .json({ message: "Stats for this date already exist for the user." });
+//     }
+
+//     // Create a new stats entry
+//     const newStats = new HealthStats({
+//       userId,
+//       date: normalizedDate,
+//       vitals,
+//       exerciseLog,
+//       symptoms,
+//       sleepPatterns,
+//       mentalHealth,
+//     });
+
+//     // Save the stats to the database
+//     await newStats.save();
+
+//     // Respond with the newly created stats
+//     res.status(201).json(newStats);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// export const getHealthStatsByDate = async (req, res) => {
+//   try {
+//     const { userId } = req.user; // userId is set by auth middleware
+//     const { date } = req.params; // Expected in "YYYY-MM-DD" format
+
+//     // Convert the date string to a Date object in UTC and normalize to the start of the day (00:00:00)
+//     const startOfDay = new Date(date);
+//     startOfDay.setUTCHours(0, 0, 0, 0);
+
+//     // Set the end of the day to 23:59:59 to capture the whole day
+//     const endOfDay = new Date(date);
+//     endOfDay.setUTCHours(23, 59, 59, 999);
+
+//     // Query the database for health stats between startOfDay and endOfDay
+//     const stats = await HealthStats.findOne({
+//       userId,
+//       date: { $gte: startOfDay, $lte: endOfDay },
+//     });
+
+//     if (!stats) {
+//       return res.status(404).json({ message: "No stats found for this date." });
+//     }
+
+//     res.status(200).json(stats);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// export const getHealthStatsByRange = async (req, res) => {
+//   try {
+//     const { userId } = req.user;
+//     const { start, end } = req.params;
+
+//     const stats = await HealthStats.find({
+//       userId,
+//       date: { $gte: new Date(start), $lte: new Date(end) },
+//     });
+
+//     res.status(200).json(stats);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
+// export const updateHealthStats = async (req, res) => {
+//   try {
+//     const { userId } = req.user;
+//     const { date } = req.params;
+//     const { vitals, exerciseLog, symptoms, sleepPatterns, mentalHealth } =
+//       req.body;
+
+//     const updatedStats = await HealthStats.findOneAndUpdate(
+//       { userId, date },
+//       { vitals, exerciseLog, symptoms, sleepPatterns, mentalHealth },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedStats) {
+//       return res.status(404).json({ message: "No stats found for this date." });
+//     }
+
+//     res.status(200).json(updatedStats);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
