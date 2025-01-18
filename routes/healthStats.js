@@ -97,7 +97,7 @@ router.put(
   updateHealthStats
 );
 
-router.get("/all-healthstats", getAllUserHealthStats);
+router.get("/all-healthstats", isAuthorized, getAllUserHealthStats);
 
 // Sample route to fetch health stats, only accessible for data analysts with the correct code
 router.get("/healthstats", isAuthorized, getAllHealthStats);
