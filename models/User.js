@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     confirmPassword: { type: String },
+    // Embed the health stats schema here
+    healthStats: {
+      type: healthStatsSchema,
+      default: {}, // Empty object means no health stats until added
+    },
   },
   { timestamps: true }
 );
@@ -34,6 +39,7 @@ userSchema.pre("save", async function (next) {
 
   this.password = await bcrypt.hash(this.password, 10);
   this.confirmPassword = undefined;
+  next();
 });
 
 // Exclude sensitive information when converting to JSON

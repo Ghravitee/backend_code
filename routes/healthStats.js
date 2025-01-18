@@ -16,7 +16,6 @@ const router = express.Router();
 
 // Validation rules for creating/updating health stats
 const healthStatsValidationRules = [
-  check("userId").isMongoId().withMessage("Invalid user ID format"),
   check("date")
     .isISO8601()
     .toDate()
@@ -83,21 +82,33 @@ const healthStatsValidationRules = [
 
 router.post(
   "/healthstats",
+  auth(["user"]), // Ensure the user is authenticated
   healthStatsValidationRules,
   validateRequest,
   createHealthStats
 );
 
-router.get("/healthstats/:date", auth(["user"]), getHealthStatsByDate);
-router.get("/range/:start/:end", auth(["user"]), getHealthStatsByRange);
+router.get(
+  "/healthstats/:date",
+  auth(["user"]), // Ensure the user is authenticated
+  getHealthStatsByDate
+);
+
+router.get(
+  "/range/:start/:end",
+  auth(["user"]), // Ensure the user is authenticated
+  getHealthStatsByRange
+);
+
 router.put(
   "/:date",
+  auth(["user"]), // Ensure the user is authenticated
   healthStatsValidationRules,
   validateRequest,
   updateHealthStats
 );
 
-router.get("/all-healthstats", getAllUserHealthStats);
+router.get("/all-healthstats", getAllUserHealthStats); // Admin route to fetch all users' health stats
 
 // Sample route to fetch health stats, only accessible for data analysts with the correct code
 router.get("/healthstats", isAuthorized, getAllHealthStats);
