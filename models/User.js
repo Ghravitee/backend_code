@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import healthStatsSchema from "../models/HealthStats";
+import healthStatsSchema from "../models/HealthStats.js";
 
 const userSchema = new mongoose.Schema(
   {
