@@ -87,7 +87,7 @@ router.post(
   validateRequest,
   createHealthStats
 );
-// router.get("/healthstats", auth(["user"]), getAllHealthStats);
+
 router.get("/healthstats/:date", auth(["user"]), getHealthStatsByDate);
 router.get("/range/:start/:end", auth(["user"]), getHealthStatsByRange);
 router.put(
